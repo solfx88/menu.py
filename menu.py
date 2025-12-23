@@ -24,6 +24,7 @@ nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Stencil', 'nuke.createNod
 nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Mask', 'nuke.createNode("Merge2", "operation mask bbox union", False)', "shift+g", shortcutContext=2) 
 nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Max', 'nuke.createNode("Merge2", "operation max bbox union", False)', "shift+t", shortcutContext=2) 
 nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Plus', 'nuke.createNode("Merge2", "operation plus bbox union", False)', "shift+y", shortcutContext=2) 
+nuke.menu('Nodes').addMenu('Shuffle/Shuffles').addCommand('Shuffle', 'nuke.createNode("Shuffle2")', "shift+e", shortcutContext=2)
  
  
  
