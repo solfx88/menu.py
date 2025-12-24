@@ -17,7 +17,7 @@ nuke.knobDefault('Merge2.label','[value mix]')
 nuke.knobDefault('Shuffle2.label','[value in1]')
 nuke.knobDefault('Shuffle.label','[value in]')
 nuke.knobDefault('Switch.label','[value which]')
-
+nuke.knobDefault("Merge2.bbox", "B")
 
 
 nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Stencil', 'nuke.createNode("Merge2", "operation stencil bbox union", False)', "shift+r", shortcutContext=2) 
