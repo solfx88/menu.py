@@ -1,0 +1,257 @@
+#! C:/Program Files/Nuke15.0v1/nuke-15.0.1.dll -nx
+
+Group {
+ inputs 3
+ name es_easyCrypto
+ tile_color 0x275a2dff
+ knobChanged "\nn = nuke.thisNode()\nk = nuke.thisKnob()\n\n# 1. 2D Picker Logic\nif k.name() == \"pos2D\":\n    loop = \['red', 'green', 'blue']\n    samPos = k.value()\n    with n:\n        inp = nuke.toNode(\"shuffle_pos\")\n        if inp:\n            new_val = \[0, 0, 0]\n            for i in range(3):\n                new_val\[i] = inp.sample(loop\[i], samPos\[0], samPos\[1])\n            n\['mat_translate'].setValue(new_val)\n"
+ addUserKnob {20 Main}
+ addUserKnob {41 layerSelection l Layer T MasterCrypto.cryptoLayerChoice}
+ addUserKnob {41 manifest l "Manifest Source" T MasterCrypto.manifestSource}
+ addUserKnob {26 divA l "" +STARTLINE}
+ addUserKnob {26 lbl_main_add l "Picker Add"}
+ addUserKnob {41 pickerAdd l "" +STARTLINE T MasterCrypto.pickerAdd}
+ addUserKnob {26 lbl_main_rem l "Picker Remove"}
+ addUserKnob {41 pickerRemove l "" +STARTLINE T MasterCrypto.pickerRemove}
+ addUserKnob {26 divB l "" +STARTLINE}
+ addUserKnob {41 matteList l "Matte List" T MasterCrypto.matteList}
+ addUserKnob {22 clear_main l Clear -STARTLINE T "nuke.thisNode()\['matteList'].setValue('')"}
+ addUserKnob {7 main_opacity l Opacity}
+ main_opacity 1
+ addUserKnob {26 divC l "" +STARTLINE}
+ addUserKnob {6 matteOnly l "Matte Only" +INVISIBLE}
+ addUserKnob {20 Depth l "Depth Mask"}
+ addUserKnob {6 enable_depth l "Enable Depth Mask" t "Enables the Depth Input." -STARTLINE}
+ addUserKnob {22 toggle_depth_view l "Toggle Preview: Depth / Result" -STARTLINE T "n = nuke.thisNode(); k = n\['preview_depth_mode']; k.setValue(0 if k.value() else 1)"}
+ addUserKnob {6 preview_depth_mode l "Preview Mode Active" -STARTLINE +HIDDEN}
+ addUserKnob {26 divD l "" +STARTLINE}
+ addUserKnob {41 depth_black l "Black Point" T DepthGrade.blackpoint}
+ addUserKnob {41 depth_white l "White Point" T DepthGrade.whitepoint}
+ addUserKnob {41 depth_gamma l Gamma T DepthGrade.gamma}
+ addUserKnob {6 depth_invert l "Invert Depth" -STARTLINE}
+ addUserKnob {20 Position l "Position Mask"}
+ addUserKnob {6 enable_pos l "Enable Position Mask" -STARTLINE}
+ addUserKnob {41 pos_layer l "Position Layer" t "Select the layer containing your World Position pass." T shuffle_pos.in}
+ addUserKnob {22 toggle_pos_view l "Toggle Preview: Position / Result" -STARTLINE T "n = nuke.thisNode(); k = n\['preview_pos_mode']; k.setValue(0 if k.value() else 1)"}
+ addUserKnob {6 preview_pos_mode l "Preview Pos Mode" -STARTLINE +HIDDEN}
+ addUserKnob {26 title_matte l <b>MATTE</b>}
+ addUserKnob {4 mat_shape l shape M {Sphere Cube Cylinder}}
+ addUserKnob {6 invert_matte l "invert matte" t "Invert the matte of the shape." +STARTLINE}
+ addUserKnob {26 divPos l "" +STARTLINE}
+ addUserKnob {12 pos2D l "2D pos" t "Select the matte spot in 2D space."}
+ addUserKnob {13 mat_translate l "3D pos"}
+ addUserKnob {26 divTrans l "" +STARTLINE}
+ addUserKnob {4 mat_rot_order l "rotation order" M {XYZ XZY YXZ YZX ZXY ZYX}}
+ addUserKnob {13 mat_rotate l rotate}
+ addUserKnob {13 mat_scaling l scale}
+ mat_scaling {1 1 1}
+ addUserKnob {7 mat_uniform_scale l "uniform scale"}
+ mat_uniform_scale 1
+ addUserKnob {13 mat_skew l skew}
+ addUserKnob {13 mat_pivot l pivot}
+ addUserKnob {26 spacer l "" +STARTLINE}
+ addUserKnob {26 title_falloff l <b>FALLOFF</b>}
+ addUserKnob {4 falloff_type l "falloff type" M {none linear smooth quadratic cubic}}
+ falloff_type linear
+ addUserKnob {7 uniform_falloff l "uniform falloff" R 0.001 1}
+ uniform_falloff 0.5
+ addUserKnob {20 Additive l "Additive IDs"}
+ addUserKnob {3 layer_count l "" +STARTLINE +HIDDEN}
+ addUserKnob {22 add_layer l "+ Add New Selection +" T "\nn = nuke.thisNode()\nc = int(n\['layer_count'].value()) + 1\nn\['layer_count'].setValue(c)\n\n# 1. Internal node logic\nwith n:\n    inp = nuke.toNode(\"crypto\")\n    final_merge = nuke.toNode(\"FinalDepthMerge\")\n    current_top = final_merge.input(0) \n\n    name = \"SubCrypto_{}\".format(c)\n    sub = nuke.nodes.Cryptomatte(name=name)\n    sub.setInput(0, inp)\n\n    master = nuke.toNode(\"MasterCrypto\")\n    knob_layer = \"cryptoLayerChoice\"\n    try:\n        sub\[knob_layer].setValue(master\[knob_layer].value())\n        sub\[knob_layer].setExpression(\"{}.{}\".format(master.name(), knob_layer))\n    except: pass\n\n    mult = nuke.nodes.Multiply(name=\"OpMult_{}\".format(c))\n    mult.setInput(0, sub)\n    mult\[\"channels\"].setValue(\"rgba\")\n    mult\[\"value\"].setExpression(\"parent.opacity_{}\".format(c))\n\n    merge = nuke.nodes.Merge2(name=\"Merge_{}\".format(c))\n    merge\[\"operation\"].setValue(\"max\")\n    merge.setInput(0, current_top) \n    merge.setInput(1, mult)\n    final_merge.setInput(0, merge)\n\n# 2. UI elements\nnuke.tcl('addUserKnob {20 Additive}')\n\ndiv = nuke.Text_Knob(\"div_sel_{}\".format(c), \"Selection {}\".format(c))\ndiv.setFlag(nuke.STARTLINE)\nn.addKnob(div)\n\nt1 = nuke.Text_Knob(\"lbl_add_{}\".format(c), \"Picker Add\")\nt1.setFlag(nuke.STARTLINE)\nn.addKnob(t1)\n\nk1 = nuke.Link_Knob(\"pick_add_{}\".format(c), \"\")\nk1.setLink(\"{}.pickerAdd\".format(name))\nk1.setFlag(nuke.STARTLINE)\nn.addKnob(k1)\n\nt2 = nuke.Text_Knob(\"lbl_rem_{}\".format(c), \"Picker Remove\")\nt2.setFlag(nuke.STARTLINE)\nn.addKnob(t2)\n\nk2 = nuke.Link_Knob(\"pick_rem_{}\".format(c), \"\")\nk2.setLink(\"{}.pickerRemove\".format(name))\nk2.setFlag(nuke.STARTLINE)\nn.addKnob(k2)\n\nlst = nuke.Link_Knob(\"matte_list_{}\".format(c), \"List\")\nlst.setLink(\"{}.matteList\".format(name))\nlst.setFlag(nuke.STARTLINE)\nn.addKnob(lst)\n\nclear = nuke.PyScript_Knob(\"clear_{}\".format(c), \"Clear\", \"nuke.thisNode()\['matte_list_{}'].setValue('')\".format(c))\nclear.setFlag(nuke.STARTLINE)\nn.addKnob(clear)\n\nop = nuke.Double_Knob(\"opacity_{}\".format(c), \"Opacity\")\nop.setFlag(nuke.STARTLINE)\nop.setValue(1.0)\nn.addKnob(op)\n\nrem_logic = \"\"\"\nn = nuke.thisNode()\nwith n:\n    c = {ID}\n    m = nuke.toNode(\"Merge_{}\".format(c))\n    if m:\n        up = m.input(0)\n        for node in nuke.allNodes():\n            if node.input(0) == m: node.setInput(0, up)\n        for d in \[\"Merge_{}\".format(c), \"SubCrypto_{}\".format(c), \"OpMult_{}\".format(c)\]:\n            node = nuke.toNode(d)\n            if node: nuke.delete(node)\n    to_del = \[k for k in n.knobs() if k.endswith(\"_{}\".format(c))\]\n    for k in to_del: n.removeKnob(n.knob(k))\n\"\"\".replace(\"{ID}\", str(c))\nrem_btn = nuke.PyScript_Knob(\"remove_{}\".format(c), \"X Remove Layer {}\".format(c), rem_logic)\nrem_btn.setFlag(nuke.STARTLINE)\nn.addKnob(rem_btn)\n" +STARTLINE}
+}
+ Axis2 {
+  inputs 0
+  rot_order {{parent.mat_rot_order}}
+  rotate {{parent.mat_rotate} {parent.mat_rotate} {parent.mat_rotate}}
+  scaling {{parent.mat_scaling} {parent.mat_scaling} {parent.mat_scaling}}
+  uniform_scale {{parent.mat_uniform_scale}}
+  skew {{parent.mat_skew} {parent.mat_skew} {parent.mat_skew}}
+  pivot_translate {{parent.mat_pivot} {parent.mat_pivot} {parent.mat_pivot}}
+  name ax_data
+ }
+ Input {
+  inputs 0
+  name InputPosition
+  number 2
+ }
+ Unpremult {
+  channels all
+  name Unpremult1
+  disable true
+ }
+ Shuffle {
+  in none
+  in2 alpha
+  alpha red2
+  name shuffle_pos
+ }
+ Remove {
+  operation keep
+  channels rgba
+  name Remove3
+ }
+ Add {
+  channels rgb
+  value {{-parent.mat_translate.x} {-parent.mat_translate.y} {-parent.mat_translate.z} 0}
+  name Add1
+ }
+ Add {
+  channels rgb
+  value {{-parent.mat_pivot.x} {-parent.mat_pivot.y} {-parent.mat_pivot.z} 0}
+  name Add3
+ }
+ ColorMatrix {
+  matrix {
+      {{parent.ax_data.world_matrix.0} {parent.ax_data.world_matrix.1} {parent.ax_data.world_matrix.2}}
+      {{parent.ax_data.world_matrix.4} {parent.ax_data.world_matrix.5} {parent.ax_data.world_matrix.6}}
+      {{parent.ax_data.world_matrix.8} {parent.ax_data.world_matrix.9} {parent.ax_data.world_matrix.10}}
+    }
+  invert true
+  name ColorMatrix1
+ }
+ Add {
+  channels rgb
+  value {{parent.mat_pivot.x} {parent.mat_pivot.y} {parent.mat_pivot.z} 0}
+  name Add2
+ }
+ Dot {
+  name Dot2
+ }
+set Ndd504400 [stack 0]
+ Expression {
+  temp_name0 circle
+  temp_expr0 "sqrt( pow2( red ) + pow2( blue ) )"
+  temp_name1 height
+  temp_expr1 "abs( green )"
+  expr3 "( parent.invert_matte ? clamp( max( circle , height ) ) : 1 - clamp( max( circle , height ) ) ) * alpha"
+  name Expression3
+  label cylinder
+ }
+push $Ndd504400
+ Expression {
+  temp_name0 newR
+  temp_expr0 "abs(red)"
+  temp_name1 newG
+  temp_expr1 "abs(green)"
+  temp_name2 newB
+  temp_expr2 "abs(blue)"
+  expr3 "( parent.invert_matte ? clamp(max(newR,newG,newB)) : 1 - clamp(max(newR,newG,newB)) ) * alpha"
+  name Expression7
+  label cube
+ }
+push $Ndd504400
+ Expression {
+  temp_name0 shape
+  temp_expr0 "clamp( sqrt( pow2(red) + pow2(green) + pow2(blue) ) )"
+  expr3 "( parent.invert_matte ? shape : 1 - shape ) * alpha"
+  name Expression9
+  label sphere
+ }
+ Switch {
+  inputs 3
+  which {{parent.mat_shape}}
+  name Switch1
+ }
+ Expression {
+  temp_name0 gfo
+  temp_expr0 "alpha * (1/ clamp(parent.uniform_falloff,0.00001,1) )"
+  expr3 "parent.falloff_type == 0 ? ( gfo > 0 ? 1 : 0 ) : parent.falloff_type == 1 ? gfo : parent.falloff_type == 2 ? smoothstep( 0 , 1 , gfo ) : parent.falloff_type == 3 ? clamp( pow2 ( gfo ) ) : clamp( gfo ** 3 )"
+  name Expression4
+  label falloff
+ }
+ Input {
+  inputs 0
+  name crypto
+ }
+set Ndcd94000 [stack 0]
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+ }
+ Premult {
+  channels all
+  name Premult1
+ }
+ Shuffle {
+  in alpha
+  name PM_Result_Shuffle
+ }
+set Ndd546400 [stack 0]
+ Input {
+  inputs 0
+  name InputDepth
+  number 1
+ }
+ Expression {
+  channel0 rgba
+  expr0 depth.Z
+  expr1 depth.Z
+  expr2 depth.Z
+  expr3 depth.Z
+  name DepthToRGBA
+ }
+ Grade {
+  channels rgba
+  name DepthGrade
+ }
+ Invert {
+  channels rgba
+  name DepthInvert
+  disable {{!parent.depth_invert}}
+ }
+ Clamp {
+  name DepthClamp
+ }
+set Ndcd95800 [stack 0]
+push $Ndd546400
+ Constant {
+  inputs 0
+  color 1
+  name WhiteConst
+ }
+set Ndcd95c00 [stack 0]
+ Switch {
+  inputs 2
+  which {{parent.enable_pos}}
+  name PosEnableSwitch
+ }
+push $Ndcd95800
+push $Ndcd95c00
+ Switch {
+  inputs 2
+  which {{parent.enable_depth}}
+  name DepthEnableSwitch
+ }
+push $Ndcd94000
+ Cryptomatte {
+  name MasterCrypto
+ }
+ Multiply {
+  channels rgba
+  value {{parent.main_opacity}}
+  name OpMult_Main
+ }
+ Dot {
+  name StartStack
+ }
+ Merge2 {
+  inputs 2
+  operation multiply
+  name MergeDepthMask
+ }
+ Merge2 {
+  inputs 2
+  operation multiply
+  name FinalDepthMerge
+ }
+ Switch {
+  inputs 3
+  which {{"parent.preview_pos_mode ? 2 : (parent.preview_depth_mode ? 1 : 0)"}}
+  name ViewSwitch
+ }
+ Output {
+  name Output1
+ }
+end_group
