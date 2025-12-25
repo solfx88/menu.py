@@ -20,10 +20,10 @@ nuke.knobDefault('Switch.label','[value which]')
 nuke.knobDefault("Merge2.bbox", "B")
 
 
-nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Stencil', 'nuke.createNode("Merge2", "operation stencil bbox union", False)', "shift+r", shortcutContext=2) 
-nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Mask', 'nuke.createNode("Merge2", "operation mask bbox union", False)', "shift+g", shortcutContext=2) 
-nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Max', 'nuke.createNode("Merge2", "operation max bbox union", False)', "shift+t", shortcutContext=2) 
-nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Plus', 'nuke.createNode("Merge2", "operation plus bbox union", False)', "shift+y", shortcutContext=2) 
+nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Stencil', 'nuke.createNode("Merge2", "operation stencil bbox B", False)', "shift+r", shortcutContext=2) 
+nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Mask', 'nuke.createNode("Merge2", "operation mask bbox B", False)', "shift+g", shortcutContext=2) 
+nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Max', 'nuke.createNode("Merge2", "operation max bbox B", False)', "shift+t", shortcutContext=2) 
+nuke.menu('Nodes').addMenu('Merge/Merges').addCommand('Plus', 'nuke.createNode("Merge2", "operation plus bbox B", False)', "shift+y", shortcutContext=2) 
 nuke.menu('Nodes').addMenu('Shuffle/Shuffles').addCommand('Shuffle', 'nuke.createNode("Shuffle2")', "shift+e", shortcutContext=2)
  
  
