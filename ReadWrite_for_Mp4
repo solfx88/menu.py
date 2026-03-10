@@ -1,0 +1,37 @@
+
+'''******************************************************
+        Creat Read Noder From Write Node.
+    -----------------------------------------
+
+__author__ = anupam-b
+__version__= 0.1145324799
+__contact__ = nimda@htmldigger.in
+
+*******************************************************'''
+
+import nuke
+
+def readWrite():
+    sel = nuke.selectedNode()
+       
+    if sel.Class() == 'Write':
+        read = nuke.createNode('Read')
+        read.setXpos(int(sel['xpos'].getValue()+80))
+        read.setYpos(int(sel['ypos'].getValue()+50))
+        read['file'].setValue(sel['file'].getValue())
+        
+        duration = int(nuke.Root()['last_frame'].getValue() - nuke.Root()['first_frame'].getValue() + 1)
+        
+        read['first'].setValue(1)
+        read['last'].setValue(duration)
+        read['origfirst'].setValue(1)
+        read['origlast'].setValue(duration)
+        read['frame_mode'].setValue('start_at')
+        read['frame'].setValue('1001')
+        read['colorspace'].setValue(int(sel['colorspace'].getValue()))
+    else:
+        nuke.message("Hey man Please select Nuke <b>Write</b> node")
+        snote = nuke.createNode('StickyNote')
+        snote['label'].setValue('Please select <b>Write</b> node You selected wrong Node')
+        snote.setYpos(int(sel['ypos'].getValue()+50))
+        snote.setXpos(int(sel['xpos'].getValue()+100))
